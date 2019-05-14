@@ -2,3 +2,4 @@
 *.mat
 *.pickle
 core.*
+__pycache__

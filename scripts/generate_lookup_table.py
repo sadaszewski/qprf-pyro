@@ -5,6 +5,8 @@ from scipy.io import loadmat, \
 import os
 import numpy as np
 import pickle
+from qprf_pyro import load_input_file, \
+    resolve_stimulus_variable
 
 
 def create_parser():
@@ -28,31 +30,6 @@ def create_parser():
     parser.add_argument('--dtype', '-dt', type=str,
         choices=['float', 'double'], default='float')
     return parser
-
-
-def load_input_file(input_filename, args):
-    name, ext = os.path.splitext(input_filename)
-    ext = ext.lower()
-    if ext == '.mat':
-        data = loadmat(input_filename)
-    else:
-        raise ValueError('Unsupported input format')
-    return data
-
-
-def resolve_stimulus_variable(data, variable_name):
-    if variable_name not in data:
-        raise ValueError('Specified variable not found')
-    var = data[variable_name]
-    while var.dtype == np.object:
-        var = var[0]
-    if len(var.shape) != 3:
-        raise ValueError('Expected data in (height, width, time_steps) shape')
-    if not np.issubdtype(var.dtype, np.floating):
-        raise ValueError('Expected data to be in normalized floating-point format')
-    if np.min(var) < 0 or np.max(var) > 1:
-        raise ValueError('Data contains values outside of [0, 1] range')
-    return var
 
 
 def make_gaussian(syy, sxx, y, x, rfsize, device):
