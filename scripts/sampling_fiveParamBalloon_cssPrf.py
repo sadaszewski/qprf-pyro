@@ -33,8 +33,7 @@ def create_parser():
     return parser
 
 
-def create_params(signal_lookup_pickle):
-
+def get_ranges_info(signal_lookup_table):
     y = signal_lookup_pickle['y']
     x = signal_lookup_pickle['x']
     rfsize = signal_lookup_pickle['rfsize']
@@ -43,44 +42,80 @@ def create_params(signal_lookup_pickle):
     min_x, max_x = np.min(x), np.max(x)
     min_rfsize, max_rfsize = np.min(rfsize), np.max(rfsize)
 
-    kappa_mean = pyro.param('kappa_mean', torch.tensor(0.65),
-        constraints=constraints.positive)
-    gamma_mean = pyro.param('gamma_mean', torch.tensor(0.41),
-        constraints=constraints.positive)
-    tau_mean = pyro.param('tau_mean', torch.tensor(0.98),
-        constraints=constraints.positive)
-    grubb_mean = pyro.param('grubb_mean', torch.tensor(0.32),
-        constraints=constraints.positive)
-    rho_mean = pyro.param('rho_mean', torch.tensor(0.34),
-        constraints=constraints.positive)
+    return min_y, max_y, min_x, max_x, min_rfsize, max_rfsize
 
-    y_mean = pyro.param('y_mean', torch.tensor((min_y + max_y) / 2),
-        constraints=constraints.interval(min_y, max_y))
-    x_mean = pyro.param('x_mean', torch.tensor((min_x + max_x) / 2),
-        constraints=constraints.interval(min_x, max_x))
-    rfsize_mean = pyro.param('rfsize_mean', torch.tensor((min_rfsize + max_rfsize) / 2),
-        constraints=constraints.interval(min_rfsize, max_rfsize))
 
-    expt_mean = pyro.param('expt_mean', torch.tensor(1.0),
-        constraints=constraints.positive)
-    gain_mean = pyro.param('gain_mean', torch.tensor(1.0),
-        constraints=constraints.positive)
+def get_priors(signal_lookup_pickle):
+    min_y, max_y, min_x, max_x, min_rfsize, max_rfsize = \
+        get_ranges_info(signal_lookup_table)
 
-    y_stdev = pyro.param('y_stdev', torch.tensor(1000.0 * (max_y - min_y)),
-        constraints=constraints.positive)
-    x_stdev = pyro.param('x_stdev', torch.tensor(1000.0 * (max_x - min_x)),
-        constraints=constraints.positive)
-    rfsize_stdev = pyro.param('rfsize_stdev', torch.tensor(1000.0 * (max_rfsize - min_rfsize)),
-        constraints=constraints.positive)
-    expt_stdev = pyro.param('expt_stdev', torch.tensor(1000.0),
-        constraints=constraints.positive)
-    gain_stdev = pyro.param('gain_stdev', torch.tensor(1000.0),
-        constraints=constraints.positive)
+    res = {
+        'kappa_mean': 0.65,
+        'gamma_mean': 0.41,
+        'tau_mean': 0.98,
+        'grubb_mean': 0.32,
+        'rho_mean': 0.34,
+
+        'y_mean': (min_y + max_y) / 2,
+        'x_mean': (min_x + max_x) / 2,
+        'rfsize_mean': (min_rfsize + max_rfsize) / 2,
+
+        'expt_mean': 1.0,
+        'gain_mean': 1.0,
+
+        'kappa_stdev': 0.015,
+        'gamma_stdev': 0.002,
+        'tau_stdev': 0.0568,
+        'grubb_stdev': 0.0015,
+        'rho_stdev': 0.0024,
+
+        'y_stdev': 1000.0 * (max_y - min_y),
+        'x_stdev': 1000.0 * (max_x - min_x),
+        'rfsize_stdev': 1000.0 * (max_rfsize - min_rfsize),
+        'expt_stdev': 1000.0,
+        'gain_stdev': 1000.0,
+
+        'noise_mean': 0.0,
+        'noise_stdev': 0.0001
+    }
+
+    return res
+
+
+def create_params(signal_lookup_pickle):
+    min_y, max_y, min_x, max_x, min_rfsize, max_rfsize = \
+        get_ranges_info(signal_lookup_table)
+
+    priors = get_priors(signal_lookup_table)
+
+    def positive_param(name):
+        return pyro.param(name, torch.tensor(priors[name]),
+            constraints=constraints.positive)
+
+    def interval_param(name, min_, max_):
+        return pyro.param(name, torch.tensor(priors[name]),
+            constraints=constraints.interval(min_, max_))
+
+    kappa_mean, gamma_mean, tau_mean, grubb_mean, rho_mean = \
+        (positive_param(name) for name in ['kappa_mean', 'gamma_mean',
+            'tau_mean', 'grubb_mean', 'rho_mean'])
+
+    y_mean = interval_param('y_mean', min_y, max_y)
+    x_mean = interval_param('x_mean', min_x, max_x)
+    rfsize_mean = interval_param('rfsize_mean', min_rfsize, max_rfsize)
+
+    expt_mean = positive_param('expt_mean')
+    gain_mean = positive_param('gain_mean')
+
+    y_stdev = positive_param('y_stdev')
+    x_stdev = positive_param('x_stdev')
+    rfsize_stdev = positive_param('rfsize_stdev')
+
+    expt_stdev = positive_param('expt_stdev')
+    gain_stdev = positive_param('gain_stdev')
 
     noise_mean = 0.0
-    noise_stdev = pyro.param('noise_stdev', torch.tensor(0.0001),
-        constraints=constraints.positive)
-
+    noise_stdev = positive_param('noise_stdev')
 
     params = {}
     for k, v in locals().items():
@@ -90,39 +125,72 @@ def create_params(signal_lookup_pickle):
     return params
 
 
-def get_samples(params, time_steps):
+def get_dists(param_values):
     for var_name in ['kappa', 'gamma', 'grubb',
         'tau', 'rho', 'x', 'y', 'rfsize', 'noise',
         'expt', 'gain']:
         for param_name in ['mean', 'stdev']:
             name = var_name + '_' + param_name
-            locals()[name] = params[name]
+            locals()[name] = param_values[name]
 
-    kappa = pyro.sample('kappa', dist.Normal(kappa_mean, kappa_stdev))
-    gamma = pyro.sample('gamma', dist.Normal(gamma_mean, gamma_stdev))
-    grubb = pyro.sample('grubb', dist.Normal(grubb_mean, grubb_stdev))
-    tau = pyro.sample('tau', dist.Normal(tau_mean, tau_stdev))
-    rho = pyro.sample('rho', dist.Normal(rho_mean, rho_stdev))
+    kappa = dist.Normal(kappa_mean, kappa_stdev)
+    gamma = dist.Normal(gamma_mean, gamma_stdev)
+    grubb = dist.Normal(grubb_mean, grubb_stdev)
+    tau = dist.Normal(tau_mean, tau_stdev)
+    rho = dist.Normal(rho_mean, rho_stdev)
 
-    x = pyro.sample('x', TruncatedNormal(x_mean, x_stdev, min_x, max_x))
-    y = pyro.sample('y', TruncatedNormal(y_mean, y_stdev, min_y, max_y))
-    rfsize = pyro.sample('rfsize', LeftTruncatedNormal(rfsize_mean, rfsize_stdev, 0.0))
-    expt = pyro.sample('expt', LeftTruncatedNormal(expt_mean, expt_stdev, 0.0))
-    gain = pyro.sample('gain', LeftTruncatedNormal(gain_mean, gain_stdev, 0.0))
+    x = TruncatedNormal(x_mean, x_stdev, min_x, max_x)
+    y = TruncatedNormal(y_mean, y_stdev, min_y, max_y)
+    rfsize = LeftTruncatedNormal(rfsize_mean, rfsize_stdev, 0.0)
+    expt = LeftTruncatedNormal(expt_mean, expt_stdev, 0.0)
+    gain = LeftTruncatedNormal(gain_mean, gain_stdev, 0.0)
 
-    noise = pyro.sample('noise', dist.HalfNormal(noise_stdev), time_steps)
+    noise = dist.HalfNormal(noise_stdev)
 
     return kappa, gamma, grubb, tau, rho, x, y, rfsize, expt, gain, noise
 
 
-def five_param_balloon(params, stimulus_lookup_pickle, device, dtype, time_steps, args):
-    # kappa, gamma, grubb, tau, rho
-    # y, x, rfsize
+def get_samples(params, time_steps):
+    kappa_d, gamma_d, grubb_d, tau_d, rho_d, x_d, y_d, \
+    rfsize_d, expt_d, gain_d, noise_d = \
+        get_dists(params)
+
+    kappa = pyro.sample('kappa', kappa_d)
+    gamma = pyro.sample('gamma', gamma_d)
+    grubb = pyro.sample('grubb', grubb_d)
+    tau = pyro.sample('tau', tau_d)
+    rho = pyro.sample('rho', rho_d)
+
+    y = pyro.sample('y', y_d)
+    x = pyro.sample('x', x_d)
+    rfsize = pyro.sample('rfsize', rfsize_d)
+    expt = pyro.sample('expt', expt_d)
+    gain = pyro.sample('gain', gain_d)
+
+    noise = pyro.sample('noise', noise_d, time_steps)
+
+    return kappa, gamma, grubb, tau, rho, y, x, rfsize, expt, gain, noise
 
 
-    kappa, gamma, grubb, tau, rho, x, y, rfsize, expt, gain, noise = \
-        get_samples(params, time_steps)
+def model(stimulus_lookup_pickle, time_steps, device):
+    priors = get_priors(stimulus_lookup_pickle)
+    model_params = get_samples(priors, time_steps)
+    res = five_param_balloon(stimulus_lookup_pickle, device, model_params)
+    return res
 
+
+def guide(stimulus_lookup_pickle, time_steps, device):
+    params = create_params(stimulus_variable_name)
+    model_params = get_samples(params, time_steps)
+    res = five_param_balloon(stimulus_lookup_pickle, device, model_params)
+    return res
+
+
+def five_param_balloon_css_prf(stimulus_lookup_pickle,
+    device, model_params):
+
+    kappa, gamma, grubb, tau, rho, y, x, rfsize, expt, gain, noise = \
+        model_params
 
     slp = stimulus_lookup_pickle
 
@@ -185,9 +253,11 @@ def five_param_balloon(params, stimulus_lookup_pickle, device, dtype, time_steps
         q += dq * t_step
 
     y = np.copysign(np.pow(np.abs(y), expt.astype(np.double)) * gain, y)
-    y = y + noise
+    # y = y + noise
+    with pyro.plate('y_plate', len(y)):
+        pyro.sample('y', dist.Normal(y, pyro.param('noise_stdev')))
+        return y
 
-    return y
 
 
 def exec_():
