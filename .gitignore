@@ -1,0 +1,4 @@
+/examples/
+*.mat
+*.pickle
+core.*
