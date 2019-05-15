@@ -70,13 +70,33 @@ def test_00_load_lookup_pickle():
     _slp = load_signal_lookup_pickle('signal_lookup_table.pickle')
 
 
-def test_01_signal_interpolation():
-    y = 16
-    x = 81
-    rfsize = 27
-    interpolated = signal_interpolation(_slp, y, x, rfsize)
-    check = _signal_interpolation_debug(_slp, y, x, rfsize)
-    print('len(interpolated):', len(interpolated))
-    print('len(check):', len(check))
-    ok = (check == interpolated).all()
-    assert ok is True
+def test_01_signal_interpolation_on_grid():
+    for i, y in enumerate(_slp['y']):
+        for k, x in enumerate(_slp['x']):
+            for m, rfsize in enumerate(_slp['rfsize']):
+                # print('y: {}, x: {}, rfsize: {}'.format(y, x, rfsize))
+                interpolated = signal_interpolation(_slp, y, x, rfsize)
+                ground_truth = _slp['lut'][i, k, m]
+                ok = (interpolated == ground_truth).all()
+                assert bool(ok) is True
+
+
+def test_02_signal_interpolation_off_grid():
+    for i in range(100):
+        y = np.random.random() * 99
+        x = np.random.random() * 99
+        rfsize = 1 + np.random.random() * 99
+        interpolated = signal_interpolation(_slp, y, x, rfsize)
+        check = _signal_interpolation_debug(_slp, y, x, rfsize)
+        print('len(interpolated):', len(interpolated))
+        print('len(check):', len(check))
+        ok = (check == interpolated).all()
+        assert bool(ok) is True
+
+
+def test_03_signal_interpolation_out_of_bounds():
+    try:
+        signal_interpolation(_slp, 100, 0, 1)
+    except IndexError:
+        return
+    assert False # Expected an exception to happen
