@@ -110,10 +110,3 @@ def test_06_get_samples():
     samples = get_samples(guide_dists)
     assert len(samples) == 10
     print('samples:', samples)
-
-
-def test_07_signal_interpolation():
-    y = 16
-    x = 81
-    rfsize = 26
-    signal_interpolation(_slp, y, x, rfsize)
