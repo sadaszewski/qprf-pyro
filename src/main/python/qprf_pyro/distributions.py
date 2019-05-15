@@ -1,5 +1,6 @@
-import pyro.distributions as dist
 import torch
+import pyro
+import pyro.distributions as dist
 
 
 class TruncatedNormal(dist.Rejector):

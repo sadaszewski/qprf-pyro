@@ -1,4 +1,10 @@
-def load_input_file(input_filename, args):
+import os
+from scipy.io import loadmat
+import numpy as np
+import pickle
+
+
+def load_input_file(input_filename):
     name, ext = os.path.splitext(input_filename)
     ext = ext.lower()
     if ext == '.mat':
@@ -34,3 +40,8 @@ def resolve_readings_variable(data, variable_name):
     if not np.issubdtype(var.dtype, np.floating):
         raise ValueError('Expected data to be in floating-point format')
     return var
+
+
+def load_signal_lookup_pickle(lookup_filename):
+    with open(lookup_filename, 'rb') as f:
+        return pickle.load(f)
