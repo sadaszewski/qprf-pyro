@@ -7,13 +7,13 @@ def signal_interpolation(stimulus_lookup_pickle, y, x, rfsize):
     slp = stimulus_lookup_pickle
     lut = slp['lut']
 
-    y_1 = np.where(y >= slp['y'])[0][0]
-    x_1 = np.where(x >= slp['x'])[0][0]
-    rfsize_1 = np.where(rfsize >= slp['rfsize'])[0][0]
+    y_2 = np.where(y <= slp['y'])[0][0]
+    x_2 = np.where(x <= slp['x'])[0][0]
+    rfsize_2 = np.where(rfsize <= slp['rfsize'])[0][0]
 
-    y_2 = min(lut.shape[0] - 1, y_1 + 1)
-    x_2 = min(lut.shape[1] - 1, x_1 + 1)
-    rfsize_2 = min(lut.shape[2] - 1, rfsize_1 + 1)
+    y_1 = max(0, y_2 - 1)
+    x_1 = max(0, x_2 - 1)
+    rfsize_1 = max(0, rfsize_2 - 1)
 
     dy = slp['y'][y_2] - slp['y'][y_1]
     dx = slp['x'][x_2] - slp['x'][x_1]
