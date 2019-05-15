@@ -9,6 +9,9 @@ def five_param_balloon_css_prf(stimulus_lookup_pickle,
     kappa, gamma, grubb, tau, rho, y, x, rfsize, expt, gain = \
         param_samples
 
+    print('stimulus_lookup_pickle:', stimulus_lookup_pickle)
+    print('y: {}, x: {}, rfsize: {}'.format(y, x, rfsize))
+    print('type(y):', type(y), 'type(lut):', type(stimulus_lookup_pickle['lut']))
     z = signal_interpolation(stimulus_lookup_pickle, \
         y, x, rfsize)
 

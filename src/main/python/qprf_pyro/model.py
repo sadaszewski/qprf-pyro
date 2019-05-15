@@ -12,9 +12,9 @@ def get_ranges_info(signal_lookup_pickle):
     x = signal_lookup_pickle['x']
     rfsize = signal_lookup_pickle['rfsize']
 
-    min_y, max_y = np.min(y), np.max(y)
-    min_x, max_x = np.min(x), np.max(x)
-    min_rfsize, max_rfsize = np.min(rfsize), np.max(rfsize)
+    min_y, max_y = torch.min(y), torch.max(y)
+    min_x, max_x = torch.min(x), torch.max(x)
+    min_rfsize, max_rfsize = torch.min(rfsize), torch.max(rfsize)
 
     return min_y, max_y, min_x, max_x, min_rfsize, max_rfsize
 
