@@ -45,13 +45,13 @@ def five_param_balloon(stimulus_lookup_pickle,
             k3 * (1. - v) )
         ds = z[t] - kappa * s - gamma * (f - 1.)
         df = s
-        dv = (f - torch.pow(v, (1. / grubb))) / tau
+        dv = ( f - torch.pow( v, (1. / grubb) ) ) / tau
         dq = ( f * ( 1. - torch.pow( (1. - rho), (1. / f) ) ) / rho - \
             torch.pow( v, (1. / grubb) ) * q / v ) / tau
-        s += ds * t_step
-        f += df * t_step
-        v += dv * t_step
-        q += dq * t_step
+        s = s + ds * t_step
+        f = f + df * t_step
+        v = v + dv * t_step
+        q = q + dq * t_step
 
     read = interpolate(read.view(1, 1, -1), size=total_time,
         mode='linear', align_corners=True).view(-1)

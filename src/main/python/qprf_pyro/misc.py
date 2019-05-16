@@ -43,11 +43,11 @@ def resolve_readings_variable(data, variable_name):
     return var
 
 
-def load_signal_lookup_pickle(lookup_filename):
+def load_signal_lookup_pickle(lookup_filename, dtype, device):
     with open(lookup_filename, 'rb') as f:
         res = pickle.load(f)
     for name in ['lut', 'y', 'x', 'rfsize']:
-        res[name] = torch.tensor(res[name])
+        res[name] = torch.tensor(res[name], dtype=dtype, device=device)
     return res
 
 

@@ -19,6 +19,7 @@ import pyro.infer
 import pyro.optim
 from collections import defaultdict
 from scipy.io import savemat
+import pdb
 
 
 def create_parser():
@@ -99,7 +100,8 @@ def main():
 
     time_points = stimulus.shape[0]
 
-    signal_lookup_pickle = load_signal_lookup_pickle(args.signal_lookup_pickle)
+    signal_lookup_pickle = load_signal_lookup_pickle(args.signal_lookup_pickle,
+        dtype=dtype, device=device)
 
     param_names = get_param_names()
 
@@ -109,6 +111,8 @@ def main():
         guide=guide,
         optim=pyro.optim.SGD({ 'lr': 0.001, 'momentum': 0.1 }),
         loss=pyro.infer.Trace_ELBO())
+
+    # torch.autograd.set_detect_anomaly(True)
 
     traces = defaultdict(lambda: [])
     for i in range(args.number_of_steps):
@@ -120,7 +124,7 @@ def main():
         for name in param_names:
             if name == 'noise_mean':
                 continue
-            traces[param_names].append(pyro.param(name).item())
+            traces[name].append(pyro.param(name).item())
 
     savemat(args.output_filename, { 'traces': traces })
 

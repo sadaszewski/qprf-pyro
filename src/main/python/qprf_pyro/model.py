@@ -10,7 +10,7 @@ from .distributions import TruncatedNormal, \
 def get_param_names():
     res = []
     for var_name in ['kappa', 'gamma', 'grubb',
-        'tau', 'rho', 'x', 'y', 'rfsize',
+        'tau', 'rho', 'y', 'x', 'rfsize',
         'expt', 'gain', 'noise']:
         for stat in ['mean', 'stdev']:
             name = var_name + '_' + stat
