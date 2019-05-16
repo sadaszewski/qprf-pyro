@@ -45,6 +45,7 @@ def create_parser():
         default=2500)
     parser.add_argument('--signal-lookup-pickle', '-l', type=str,
         required=True)
+    parser.add_argument('--debug', '-g', action='store_true')
     return parser
 
 
@@ -54,6 +55,7 @@ def model(signal_lookup_pickle, time_steps,
 
     priors = get_priors(signal_lookup_pickle)
     dists = get_dists(priors, signal_lookup_pickle)
+    # pdb.set_trace()
     model_params = get_samples(dists)
     res = five_param_balloon(signal_lookup_pickle, model_params,
         priors['noise_stdev'], repetition_time, subdivisions)
@@ -66,6 +68,7 @@ def guide(signal_lookup_pickle, time_steps,
     repetition_time, subdivisions):
 
     params = create_params(signal_lookup_pickle)
+    # pdb.set_trace()
     dists = get_dists(params, signal_lookup_pickle)
     model_params = get_samples(dists)
     res = five_param_balloon(signal_lookup_pickle, model_params,
@@ -95,6 +98,9 @@ def main():
         dtype=dtype, device=device)
 
     readings = detrend_readings(readings, args.detrend_order)
+
+    savemat('readings.mat', { 'readings': readings })
+
     readings = torch.tensor(readings,
         dtype=dtype, device=device)
 
@@ -109,10 +115,12 @@ def main():
     conditioned_model = pyro.condition(model, data = { 'read': readings[0] })
     svi = pyro.infer.SVI(model=conditioned_model,
         guide=guide,
-        optim=pyro.optim.SGD({ 'lr': 0.001, 'momentum': 0.1 }),
+        optim=pyro.optim.Rprop({ 'lr': 0.00001 }), # 'momentum': 0.1 }),
         loss=pyro.infer.Trace_ELBO())
 
     # torch.autograd.set_detect_anomaly(True)
+    if args.debug:
+        pdb.set_trace()
 
     traces = defaultdict(lambda: [])
     for i in range(args.number_of_steps):
@@ -124,7 +132,12 @@ def main():
         for name in param_names:
             if name == 'noise_mean':
                 continue
-            traces[name].append(pyro.param(name).item())
+            val = pyro.param(name)
+            if torch.isnan(val):
+                raise ValueError('One of the parameters became NaN. Vanishing gradient?')
+            traces[name].append(val.item())
+
+        # pdb.set_trace()
 
     savemat(args.output_filename, { 'traces': traces })
 

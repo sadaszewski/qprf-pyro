@@ -46,7 +46,7 @@ def get_priors(signal_lookup_pickle):
         'rfsize_mean': (min_rfsize + max_rfsize) / 2,
 
         'expt_mean': 1.0,
-        'gain_mean': 1.0,
+        'gain_mean': 200.0,
 
         'kappa_stdev': 0.015,
         'gamma_stdev': 0.002,
@@ -58,7 +58,7 @@ def get_priors(signal_lookup_pickle):
         'x_stdev': 2.0 * (max_x - min_x),
         'rfsize_stdev': 2.0 * (max_rfsize - min_rfsize),
         'expt_stdev': 0.1,
-        'gain_stdev': 0.1,
+        'gain_stdev': 1.0,
 
         'noise_mean': 0.0,
         'noise_stdev': 0.0001
