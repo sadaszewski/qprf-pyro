@@ -1,3 +1,8 @@
+#
+# Copyright (C) Stanislaw Adaszewski, 2019
+#
+
+
 from argparse import ArgumentParser
 import os
 from qprf_pyro import load_input_file, \

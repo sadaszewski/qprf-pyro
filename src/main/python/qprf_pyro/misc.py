@@ -1,3 +1,8 @@
+#
+# Copyright (C) Stanislaw Adaszewski, 2019
+#
+
+
 import os
 from scipy.io import loadmat
 import numpy as np

@@ -1,3 +1,8 @@
+#
+# Copyright (C) Stanislaw Adaszewski, 2019
+#
+
+
 from .misc import *
 from .distributions import *
 from .model import *

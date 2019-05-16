@@ -1,3 +1,8 @@
+#
+# Copyright (C) Stanislaw Adaszewski, 2019
+#
+
+
 import torch
 import pyro
 import pyro.distributions as dist

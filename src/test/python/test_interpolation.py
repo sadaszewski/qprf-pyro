@@ -1,3 +1,8 @@
+#
+# Copyright (C) Stanislaw Adaszewski, 2019
+#
+
+
 from qprf_pyro import signal_interpolation, \
     load_signal_lookup_pickle
 import numpy as np

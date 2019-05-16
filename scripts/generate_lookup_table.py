@@ -1,3 +1,8 @@
+#
+# Copyright (C) Stanislaw Adaszewski, 2019
+#
+
+
 from argparse import ArgumentParser
 import torch
 from scipy.io import loadmat, \

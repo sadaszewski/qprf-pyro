@@ -1,3 +1,8 @@
+#
+# Copyright (C) Stanislaw Adaszewski, 2019
+#
+
+
 import numpy as np
 import pyro
 from torch.distributions import constraints

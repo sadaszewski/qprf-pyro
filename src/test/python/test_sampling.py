@@ -1,3 +1,8 @@
+#
+# Copyright (C) Stanislaw Adaszewski, 2019
+#
+
+
 from qprf_pyro import load_input_file, \
     resolve_stimulus_variable, \
     resolve_readings_variable, \

@@ -1,3 +1,8 @@
+#
+# Copyright (C) Stanislaw Adaszewski, 2019
+#
+
+
 from qprf_pyro import five_param_balloon, \
     css_prf, \
     iid_noise, \
