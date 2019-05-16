@@ -2,6 +2,7 @@ import os
 from scipy.io import loadmat
 import numpy as np
 import pickle
+import torch
 
 
 def load_input_file(input_filename):
@@ -44,4 +45,25 @@ def resolve_readings_variable(data, variable_name):
 
 def load_signal_lookup_pickle(lookup_filename):
     with open(lookup_filename, 'rb') as f:
-        return pickle.load(f)
+        res = pickle.load(f)
+    for name in ['lut', 'y', 'x', 'rfsize']:
+        res[name] = torch.tensor(res[name])
+    return res
+
+
+def detrend_readings(data, order=4):
+    if len(data.shape) != 2:
+        raise ValueError('Expected data in (vertices, time_points) shape')
+    data = data.copy()
+    a = np.linspace(0, 1, data.shape[1])
+    b = []
+    for i in range(0, order+1):
+        b.append(a ** i)
+    b = np.array(b).T
+    c = np.linalg.pinv(b)
+    d = np.matmul(b, c)
+
+    for i in range(len(data)):
+        data[i] -= np.matmul(d, data[i])
+
+    return data

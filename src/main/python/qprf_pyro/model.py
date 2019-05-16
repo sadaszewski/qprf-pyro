@@ -7,6 +7,17 @@ from .distributions import TruncatedNormal, \
     LeftTruncatedNormal
 
 
+def get_param_names():
+    res = []
+    for var_name in ['kappa', 'gamma', 'grubb',
+        'tau', 'rho', 'x', 'y', 'rfsize',
+        'expt', 'gain', 'noise']:
+        for stat in ['mean', 'stdev']:
+            name = var_name + '_' + stat
+            res.append(name)
+    return res
+
+
 def get_ranges_info(signal_lookup_pickle):
     y = signal_lookup_pickle['y']
     x = signal_lookup_pickle['x']
@@ -70,11 +81,11 @@ def create_params(signal_lookup_pickle):
     priors = get_priors(signal_lookup_pickle)
 
     def positive_param(name):
-        return pyro.param(name, torch.tensor(priors[name]),
+        return pyro.param(name, priors[name],
             constraint=constraints.positive)
 
     def interval_param(name, min_, max_):
-        return pyro.param(name, torch.tensor(priors[name]),
+        return pyro.param(name, priors[name],
             constraint=constraints.interval(min_, max_))
 
     kappa_mean, gamma_mean, tau_mean, grubb_mean, rho_mean = \
