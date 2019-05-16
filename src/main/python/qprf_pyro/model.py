@@ -46,12 +46,19 @@ def get_priors(signal_lookup_pickle):
         'y_stdev': 2.0 * (max_y - min_y),
         'x_stdev': 2.0 * (max_x - min_x),
         'rfsize_stdev': 2.0 * (max_rfsize - min_rfsize),
-        'expt_stdev': 10.0,
-        'gain_stdev': 10.0,
+        'expt_stdev': 0.1,
+        'gain_stdev': 0.1,
 
         'noise_mean': 0.0,
-        'noise_stdev': 0.01
+        'noise_stdev': 0.0001
     }
+
+    lut = signal_lookup_pickle['lut']
+
+    res = { k: v \
+        if isinstance(v, torch.Tensor) \
+        else torch.tensor(v, dtype=lut.dtype, device=lut.device) \
+        for k, v in res.items() }
 
     return res
 
